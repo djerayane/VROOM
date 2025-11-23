@@ -5,6 +5,7 @@
 #include <type_traits>
 
 #include "vroom/core/Component.hpp"
+#include <glm/glm.hpp>
 
 namespace vroom {
 
@@ -24,7 +25,13 @@ public:
     /// \brief Constructs an entity with a specific ID and scene.
     /// \param id The unique identifier for the entity.
     /// \param scene The scene this entity belongs to.
-    Entity(EntityId id, std::shared_ptr<Scene> scene);
+    /// \param position Optional initial position.
+    /// \param rotation Optional initial rotation in degrees.
+    /// \param scale Optional initial scale.
+    Entity(EntityId id, std::shared_ptr<Scene> scene, 
+           const glm::vec3& position = glm::vec3(0.0f),
+           const glm::vec3& rotation = glm::vec3(0.0f),
+           const glm::vec3& scale = glm::vec3(1.0f));
     
     ~Entity();
 

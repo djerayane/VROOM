@@ -29,6 +29,7 @@ add_executable(core_tests
     core/SceneTest.cpp
     core/SceneManagerTest.cpp
     core/AssetManagerTest.cpp
+    components/TransformTest.cpp
 )
 
 target_link_libraries(core_tests

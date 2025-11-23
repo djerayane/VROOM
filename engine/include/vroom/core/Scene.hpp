@@ -12,9 +12,14 @@ public:
     Scene();
     ~Scene();
 
-    /// \brief Creates a new entity in the scene.
+    /// \brief Creates a new entity in the scene with optional transform values.
+    /// \param position Initial position.
+    /// \param rotation Initial rotation in degrees.
+    /// \param scale Initial scale.
     /// \return Reference to the newly created entity.
-    Entity& createEntity();
+    std::shared_ptr<Entity> createEntity(const glm::vec3& position = glm::vec3(0.0f),
+                                         const glm::vec3& rotation = glm::vec3(0.0f),
+                                         const glm::vec3& scale = glm::vec3(1.0f));
 
     /// \brief Sets the SceneManager for this scene.
     /// \param sceneManager Pointer to the SceneManager.
@@ -49,4 +54,3 @@ private:
 };
 
 } // namespace vroom
-

@@ -12,11 +12,13 @@ Scene::~Scene() {
     clear();
 }
 
-Entity& Scene::createEntity() {
-    auto entity = std::make_shared<Entity>(generateEntityId(), shared_from_this());
+std::shared_ptr<Entity> Scene::createEntity(const glm::vec3& position,
+                                            const glm::vec3& rotation,
+                                            const glm::vec3& scale) {
+    auto entity = std::make_shared<Entity>(generateEntityId(), shared_from_this(), position, rotation, scale);
     m_entities.push_back(entity);
     LOG_ENGINE_CLASS_DEBUG("Created Entity ID: " + std::to_string(entity->getId()));
-    return *entity;
+    return entity;
 }
 
 void Scene::destroyEntity(Entity& entity) {
@@ -82,4 +84,3 @@ EntityId Scene::generateEntityId() {
 }
 
 } // namespace vroom
-

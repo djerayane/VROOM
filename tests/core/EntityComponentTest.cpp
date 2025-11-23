@@ -22,6 +22,10 @@ public:
 TEST(EntityComponentTest, AddAndGetComponent) {
     vroom::Entity entity(1, nullptr);
 
+    // Fix arguments to match Transform constructor being called by Entity constructor or avoid if manual
+    // Entity constructor adds Transform automatically now.
+    // But here we are testing Entity independently without Scene, using dummy args.
+    
     auto& pos = entity.addComponent<PositionComponent>(10.0f, 20.0f, 30.0f);
     EXPECT_EQ(pos.x, 10.0f);
     EXPECT_EQ(pos.y, 20.0f);

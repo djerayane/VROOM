@@ -1,13 +1,18 @@
 #include "vroom/core/Entity.hpp"
 #include "vroom/core/Scene.hpp"
+#include "vroom/components/Transform.hpp"
 #include "vroom/logging/LogMacros.hpp"
 #include <algorithm>
 #include <string>
 
 namespace vroom {
 
-Entity::Entity(EntityId id, std::shared_ptr<Scene> scene)
+Entity::Entity(EntityId id, std::shared_ptr<Scene> scene,
+               const glm::vec3& position,
+               const glm::vec3& rotation,
+               const glm::vec3& scale)
     : m_id(id), m_scene(std::move(scene)) {
+    addComponent<Transform>(position, rotation, scale);
 }
 
 Entity::~Entity() {
