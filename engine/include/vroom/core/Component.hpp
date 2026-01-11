@@ -2,6 +2,9 @@
 
 #include <memory>
 
+// Forward declaration of the global Vulkan struct
+struct VkCommandBuffer_T;
+
 namespace vroom {
 
 class Entity;
@@ -13,10 +16,14 @@ public:
     Entity* getEntity() const { return m_entity; }
     void setEntity(Entity* entity) { m_entity = entity; }
 
+    // Use the global struct type
+    using VkCommandBuffer = struct ::VkCommandBuffer_T*;
+
     // Lifecycle methods
     virtual void awake() {}
     virtual void start() {}
     virtual void update(float deltaTime) {}
+    virtual void draw(VkCommandBuffer commandBuffer) {}
     virtual void onEnable() {}
     virtual void onDisable() {}
     virtual void onDestroy() {}

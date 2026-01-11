@@ -1,9 +1,14 @@
 #include "vroom/asset/AssetManager.hpp"
 #include "vroom/asset/ShaderCompiler.hpp"
+#include "vroom/asset/Mesh.hpp"
+#include "vroom/asset/ObjLoader.hpp"
 
 namespace vroom {
 
-AssetManager::AssetManager() = default;
+AssetManager::AssetManager() {
+    registerLoader<Mesh>(ObjLoader::load);
+}
+
 AssetManager::~AssetManager() = default;
 
 void AssetManager::addProvider(std::unique_ptr<AssetProvider> provider) {

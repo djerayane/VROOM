@@ -37,6 +37,10 @@ public:
     /// \param deltaTime Time elapsed since the last frame.
     void update(float deltaTime);
 
+    /// \brief Draws all entities in the scene.
+    /// \param commandBuffer The command buffer to record draw commands to.
+    void draw(struct ::VkCommandBuffer_T* commandBuffer);
+
     /// \brief Removes all entities from the scene.
     void clear();
 

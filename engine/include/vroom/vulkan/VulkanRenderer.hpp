@@ -13,15 +13,23 @@ struct GLFWwindow;
 
 namespace vroom {
 
+class Mesh;
+class Scene;
+
 class VulkanRenderer {
 public:
     VulkanRenderer(AssetManager& assetManager); // Pass AssetManager
     ~VulkanRenderer();
 
     void init(GLFWwindow* window);
-    void drawFrame();
+    void drawFrame(std::shared_ptr<Scene> scene);
     void deviceWaitIdle();
     void setFramebufferResized(bool resized) { m_framebufferResized = resized; }
+    
+    void uploadMesh(std::shared_ptr<Mesh> mesh);
+    
+    VkPipelineLayout getPipelineLayout() const { return m_pipelineLayout; }
+    VulkanDevice& getDevice() { return *m_device; }
 
 private:
     void createRenderPass();
@@ -29,14 +37,15 @@ private:
     void createFramebuffers();
     void createCommandBuffers();
     void createSyncObjects();
-    
     void recreateSwapChain();
-    void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
-
+    void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex, std::shared_ptr<Scene> scene);
     VkShaderModule createShaderModule(const std::vector<char>& code);
     // Removed readFile as we use AssetManager now
 
     AssetManager& m_assetManager; // Reference to AssetManager
+    VkPipelineVertexInputStateCreateInfo createVertexInputState(VkVertexInputBindingDescription& bindingDesc, std::array<VkVertexInputAttributeDescription, 3>& attrDescs);
+    VkPipelineLayoutCreateInfo createPipelineLayoutInfo(VkPushConstantRange& pushConstantRange);
+    VkGraphicsPipelineCreateInfo createGraphicsPipelineInfo(VkPipelineShaderStageCreateInfo* shaderStages, VkPipelineVertexInputStateCreateInfo& vertexInput, VkPipelineInputAssemblyStateCreateInfo& inputAssembly, VkPipelineViewportStateCreateInfo& viewportState, VkPipelineRasterizationStateCreateInfo& rasterizer, VkPipelineMultisampleStateCreateInfo& multisampling, VkPipelineColorBlendStateCreateInfo& colorBlending, VkPipelineDynamicStateCreateInfo& dynamicState);
 
     GLFWwindow* m_window = nullptr;
     

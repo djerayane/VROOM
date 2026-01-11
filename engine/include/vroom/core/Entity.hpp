@@ -43,6 +43,10 @@ public:
     /// \param deltaTime Time elapsed since the last frame.
     void update(float deltaTime);
 
+    /// \brief Draws the entity and all its enabled components.
+    /// \param commandBuffer The command buffer to record draw commands to.
+    void draw(struct ::VkCommandBuffer_T* commandBuffer);
+
     /// \brief Sets the active state of the entity.
     /// \param active The new active state.
     void setActive(bool active);

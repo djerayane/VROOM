@@ -30,18 +30,15 @@ void Scene::destroyEntity(Entity& entity) {
             destroyEntity(*child);
         }
     }
-
     // Remove from parent if exists
     if (auto* parent = entity.getParent()) {
         parent->removeChild(&entity);
     }
-
     // Remove from scene storage
-    auto it = std::remove_if(m_entities.begin(), m_entities.end(), 
+    auto it = std::remove_if(m_entities.begin(), m_entities.end(),
         [&entity](const std::shared_ptr<Entity>& e) {
             return e.get() == &entity;
         });
-    
     if (it != m_entities.end()) {
         m_entities.erase(it, m_entities.end());
     }
@@ -52,11 +49,20 @@ void Scene::update(float deltaTime) {
     // Ideally we'd have a "pending addition" and "pending removal" list, but for now direct iteration
     // We copy the vector to avoid iterator invalidation if entities are added/removed
     auto entitiesSnapshot = m_entities;
-    
     for (const auto& entity : entitiesSnapshot) {
         // Only update root entities to avoid double updates, as Entity::update handles children recursively
         if (entity && entity->isActive() && entity->getParent() == nullptr) {
              entity->update(deltaTime);
+        }
+    }
+}
+
+void Scene::draw(::VkCommandBuffer_T* commandBuffer) {
+    // Copy for safety similar to update
+    auto entitiesSnapshot = m_entities;
+    for (const auto& entity : entitiesSnapshot) {
+        if (entity && entity->isActive() && entity->getParent() == nullptr) {
+             entity->draw(commandBuffer);
         }
     }
 }

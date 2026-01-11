@@ -41,17 +41,24 @@ public:
     /// \return Reference to the asset manager.
     AssetManager& getAssetManager() { return *m_assetManager; }
 
+    /// \brief Gets the renderer.
+    VulkanRenderer* getRenderer() const { return m_renderer.get(); }
+
+    static Engine& getInstance() { return *s_instance; }
+
 private:
     void initWindow();
     static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 
     EngineConfig m_config;
     std::shared_ptr<SceneManager> m_sceneManager;
-    std::unique_ptr<AssetManager> m_assetManager;
+    std::shared_ptr<AssetManager> m_assetManager;
     bool m_isRunning;
 
     GLFWwindow* m_window = nullptr;
     std::unique_ptr<VulkanRenderer> m_renderer;
+
+    static Engine* s_instance;
 };
 
 } // namespace vroom
