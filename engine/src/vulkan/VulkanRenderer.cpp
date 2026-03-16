@@ -2,6 +2,7 @@
 #include "vroom/logging/LogMacros.hpp"
 #include "vroom/asset/ShaderAsset.hpp"
 #include "vroom/core/Scene.hpp"
+#include "vroom/components/Camera.hpp"
 #include "vroom/asset/Mesh.hpp"
 #include "vroom/vulkan/VulkanMeshData.hpp"
 #include "vroom/vulkan/VulkanBuffer.hpp"
@@ -253,7 +254,7 @@ VkPipelineVertexInputStateCreateInfo VulkanRenderer::createVertexInputState(VkVe
 VkPipelineLayoutCreateInfo VulkanRenderer::createPipelineLayoutInfo(VkPushConstantRange& pushConstantRange) {
     pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     pushConstantRange.offset = 0;
-    pushConstantRange.size = sizeof(glm::mat4);
+    pushConstantRange.size = 2 * sizeof(glm::mat4); // viewProjection + model
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = 0;
@@ -420,20 +421,31 @@ void VulkanRenderer::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t
 
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
 
+        VkExtent2D extent = m_swapChain->getSwapChainExtent();
         VkViewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = (float) m_swapChain->getSwapChainExtent().width;
-        viewport.height = (float) m_swapChain->getSwapChainExtent().height;
+        viewport.width = static_cast<float>(extent.width);
+        viewport.height = static_cast<float>(extent.height);
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
         vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
         VkRect2D scissor{};
         scissor.offset = {0, 0};
-        scissor.extent = m_swapChain->getSwapChainExtent();
+        scissor.extent = extent;
         vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
+        // Compute and push the view-projection matrix from the scene camera.
+        glm::mat4 viewProjection(1.0f);
+        if (scene) {
+            Camera* camera = Camera::getMain(*scene);
+            if (camera) {
+                float aspectRatio = (extent.height > 0)
+                    ? static_cast<float>(extent.width) / static_cast<float>(extent.height)
+                    : 1.0f;
+                viewProjection = camera->getViewProjectionMatrix(aspectRatio);
+            }
+        }
+        vkCmdPushConstants(commandBuffer, m_pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &viewProjection);
         if (scene) {
             scene->draw(commandBuffer);
         } else {

@@ -9,7 +9,7 @@ namespace vroom {
 static void parsePosition(std::stringstream& lineSS, std::vector<glm::vec3>& positions) {
     glm::vec3 pos;
     lineSS >> pos.x >> pos.y >> pos.z;
-    pos.y = -pos.y;
+
     positions.push_back(pos);
 }
 

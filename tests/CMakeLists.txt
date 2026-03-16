@@ -32,6 +32,7 @@ add_executable(core_tests
     core/MeshTest.cpp
     core/DrawingTest.cpp
     components/TransformTest.cpp
+    components/CameraTest.cpp
 )
 
 target_link_libraries(core_tests
