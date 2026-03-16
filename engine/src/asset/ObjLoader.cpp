@@ -1,5 +1,6 @@
 #include "vroom/asset/ObjLoader.hpp"
 #include "vroom/logging/LogMacros.hpp"
+#include <algorithm>
 #include <sstream>
 #include <stdexcept>
 
