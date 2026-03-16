@@ -107,8 +107,8 @@ public:
 
 TEST_F(SceneManagerTest, UpdateCallsUpdateOnScenes) {
     auto scene1 = std::make_shared<Scene>();
-    auto& entity = scene1->createEntity();
-    auto& component = entity.addComponent<MockComponent>();
+    auto entity = scene1->createEntity();
+    auto& component = entity->addComponent<MockComponent>();
     
     EXPECT_CALL(*sceneManager, createSceneFromFile("scene1"))
         .WillOnce(testing::Return(scene1));
@@ -131,9 +131,9 @@ TEST_F(SceneManagerTest, ComponentCanAccessSceneManager) {
     ASSERT_NE(activeScene, nullptr);
     EXPECT_EQ(activeScene->getSceneManager(), sceneManager.get());
 
-    auto& entity = activeScene->createEntity();
-    auto& component = entity.addComponent<MockComponent>();
+    auto entity = activeScene->createEntity();
+    auto& component = entity->addComponent<MockComponent>();
 
-    EXPECT_EQ(entity.getSceneManager(), sceneManager.get());
+    EXPECT_EQ(entity->getSceneManager(), sceneManager.get());
     EXPECT_EQ(component.getSceneManager(), sceneManager.get());
 }

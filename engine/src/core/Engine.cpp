@@ -10,6 +10,12 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#ifdef VROOM_WITH_IMGUI
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_vulkan.h>
+#endif
+
 #include <chrono>
 #include <stdexcept>
 #include <thread>
@@ -17,8 +23,14 @@
 
 namespace vroom {
 
-Engine::Engine(const EngineConfig& config) 
+Engine* Engine::s_instance = nullptr;
+
+Engine::Engine(const EngineConfig& config)
     : m_config(config), m_isRunning(false) {
+    if (s_instance) {
+        throw std::runtime_error("Engine instance already exists!");
+    }
+    s_instance = this;
     LOG_ENGINE_INFO("Initializing VROOM Engine v" + Version::getVersionString() + " (" + Version::GIT_HASH + ")");
     
     // Initialize Asset Manager
@@ -107,6 +119,11 @@ Engine::Engine(const EngineConfig& config)
 
     if (!m_config.headless) {
         initWindow();
+#ifdef VROOM_WITH_IMGUI
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGui_ImplGlfw_InitForVulkan(m_window, true);
+#endif
 
         m_renderer = std::make_unique<VulkanRenderer>(*m_assetManager);
         try {
@@ -118,20 +135,28 @@ Engine::Engine(const EngineConfig& config)
     } else {
         LOG_ENGINE_INFO("Running in HEADLESS mode. Graphics system disabled.");
     }
-
     m_sceneManager = std::make_shared<SceneManager>();
+    m_assetManager = std::make_shared<AssetManager>();
 }
 
 Engine::~Engine() {
     if (m_renderer) {
         m_renderer->deviceWaitIdle();
+    }
+    m_sceneManager.reset();
+    m_assetManager.reset();
+    if (m_renderer) {
         m_renderer.reset();
     }
-
+#ifdef VROOM_WITH_IMGUI
+    if (!m_config.headless) {
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+    }
+#endif
     if (m_window) {
         glfwDestroyWindow(m_window);
     }
-    
     if (!m_config.headless) {
         glfwTerminate();
     }
@@ -145,16 +170,13 @@ void Engine::initWindow() {
     if (!glfwInit()) {
         throw std::runtime_error("Failed to initialize GLFW");
     }
-
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-
     m_window = glfwCreateWindow(m_config.windowWidth, m_config.windowHeight, m_config.windowTitle, nullptr, nullptr);
     if (!m_window) {
         glfwTerminate();
         throw std::runtime_error("Failed to create GLFW window");
     }
-
     glfwSetWindowUserPointer(m_window, this);
     glfwSetFramebufferSizeCallback(m_window, framebufferResizeCallback);
 }
@@ -175,25 +197,29 @@ void Engine::update(float deltaTime) {
 void Engine::run() {
     m_isRunning = true;
     auto lastTime = std::chrono::high_resolution_clock::now();
-
     LOG_ENGINE_INFO("Starting engine loop...");
-
     while (m_isRunning) {
         if (m_window && !glfwWindowShouldClose(m_window)) {
             glfwPollEvents();
         } else if (m_window && glfwWindowShouldClose(m_window)) {
             m_isRunning = false;
         }
-
         auto currentTime = std::chrono::high_resolution_clock::now();
         float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
         lastTime = currentTime;
-
         update(deltaTime);
-        
         if (m_renderer && m_window) {
             try {
-                m_renderer->drawFrame();
+#ifdef VROOM_WITH_IMGUI
+                ImGui_ImplVulkan_NewFrame();
+                ImGui_ImplGlfw_NewFrame();
+                ImGui::NewFrame();
+                if (m_imguiCallback) {
+                    m_imguiCallback();
+                }
+                ImGui::Render();
+#endif
+                m_renderer->drawFrame(m_sceneManager->getActiveScene());
             } catch (const std::exception& e) {
                 LOG_ENGINE_ERROR("Render error: " + std::string(e.what()));
                 m_isRunning = false;
@@ -204,7 +230,6 @@ void Engine::run() {
             std::this_thread::sleep_for(std::chrono::milliseconds(16)); // ~60 FPS
         }
     }
-
     if (m_renderer) {
         m_renderer->deviceWaitIdle();
     }

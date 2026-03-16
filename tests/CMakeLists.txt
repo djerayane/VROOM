@@ -29,6 +29,9 @@ add_executable(core_tests
     core/SceneTest.cpp
     core/SceneManagerTest.cpp
     core/AssetManagerTest.cpp
+    core/MeshTest.cpp
+    core/DrawingTest.cpp
+    components/TransformTest.cpp
 )
 
 target_link_libraries(core_tests
@@ -48,7 +51,7 @@ target_include_directories(core_tests
 add_executable(vulkan_tests
     vulkan/VulkanDeviceTest.cpp
     vulkan/VulkanSwapChainTest.cpp
-    # vulkan/VulkanRendererTest.cpp
+    vulkan/VulkanRendererTest.cpp
 )
 
 target_link_libraries(vulkan_tests

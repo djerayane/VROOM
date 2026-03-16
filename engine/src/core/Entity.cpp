@@ -1,18 +1,22 @@
 #include "vroom/core/Entity.hpp"
 #include "vroom/core/Scene.hpp"
+#include "vroom/components/Transform.hpp"
 #include "vroom/logging/LogMacros.hpp"
 #include <algorithm>
 #include <string>
 
 namespace vroom {
 
-Entity::Entity(EntityId id, std::shared_ptr<Scene> scene)
+Entity::Entity(EntityId id, std::shared_ptr<Scene> scene,
+               const glm::vec3& position,
+               const glm::vec3& rotation,
+               const glm::vec3& scale)
     : m_id(id), m_scene(std::move(scene)) {
+    addComponent<Transform>(position, rotation, scale);
 }
 
 Entity::~Entity() {
     // LOG_ENGINE_CLASS_DEBUG("Destroying Entity ID: " + std::to_string(m_id)); // Too spammy for regular runs
-    
     // Detach children first
     // We create a copy because setParent(nullptr) modifies the m_children vector
     auto childrenCopy = m_children;
@@ -21,7 +25,6 @@ Entity::~Entity() {
             child->setParent(nullptr);
         }
     }
-
     // Detach from parent
     if (m_parent) {
         auto& parentChildren = m_parent->m_children;
@@ -30,7 +33,6 @@ Entity::~Entity() {
             parentChildren.erase(it);
         }
     }
-
     for (auto& component : m_components) {
         component->onDestroy();
     }
@@ -45,23 +47,34 @@ void Entity::update(float deltaTime) {
     if (!isActive()) {
         return;
     }
-
     for (auto& component : m_components) {
         if (component->isEnabled()) {
             if (!component->hasStarted()) {
                 component->start();
                 component->markStarted();
             }
-            
             // Check enabled again in case start() disabled the component
             if (component->isEnabled()) {
                 component->update(deltaTime);
             }
         }
     }
-
     for (auto* child : m_children) {
         child->update(deltaTime);
+    }
+}
+
+void Entity::draw(struct VkCommandBuffer_T* commandBuffer) {
+    if (!isActive()) {
+        return;
+    }
+    for (auto& component : m_components) {
+        if (component->isEnabled()) {
+            component->draw(commandBuffer);
+        }
+    }
+    for (auto* child : m_children) {
+        child->draw(commandBuffer);
     }
 }
 
@@ -69,11 +82,9 @@ void Entity::setActive(bool active) {
     if (m_active == active) {
         return;
     }
-
     bool wasActive = isActive();
     m_active = active;
     bool isNowActive = isActive();
-
     if (wasActive != isNowActive) {
         handleActiveStateChange(wasActive, isNowActive);
     }
@@ -90,7 +101,6 @@ void Entity::handleActiveStateChange(bool wasActive, bool isNowActive) {
             }
         }
     }
-
     // Notify children
     for (auto* child : m_children) {
         // Child's local active state hasn't changed, but effective state might have
@@ -105,7 +115,6 @@ void Entity::setParent(Entity* parent) {
     if (m_parent == parent) {
         return;
     }
-
     // Prevent cycles: check if new parent is a descendant of this entity
     Entity* p = parent;
     while (p) {
@@ -115,9 +124,7 @@ void Entity::setParent(Entity* parent) {
         }
         p = p->getParent();
     }
-
     bool wasActive = isActive();
-
     if (m_parent) {
         auto& parentChildren = m_parent->m_children;
         auto it = std::find(parentChildren.begin(), parentChildren.end(), this);
@@ -125,13 +132,10 @@ void Entity::setParent(Entity* parent) {
             parentChildren.erase(it);
         }
     }
-
     m_parent = parent;
-
     if (m_parent) {
         m_parent->m_children.push_back(this);
     }
-
     bool isNowActive = isActive();
     if (wasActive != isNowActive) {
         handleActiveStateChange(wasActive, isNowActive);

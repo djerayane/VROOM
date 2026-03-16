@@ -35,7 +35,7 @@ public:
 class SystemShaderCompiler : public ShaderCompiler {
 public:
     SystemShaderCompiler();
-    
+
     [[nodiscard]] std::optional<std::vector<char>> compile(
         const std::filesystem::path& sourcePath,
         const std::string& sourceCode,
@@ -44,5 +44,3 @@ public:
 };
 
 } // namespace vroom
-
-

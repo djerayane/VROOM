@@ -23,37 +23,37 @@ public:
 };
 
 TEST_F(SceneTest, CreateEntity) {
-    Entity& entity = scene->createEntity();
-    EXPECT_TRUE(entity.isActive());
+    auto entity = scene->createEntity();
+    EXPECT_TRUE(entity->isActive());
     EXPECT_EQ(scene->getRootEntities().size(), 1);
-    EXPECT_EQ(scene->getRootEntities()[0], &entity);
+    EXPECT_EQ(scene->getRootEntities()[0], entity.get());
 }
 
 TEST_F(SceneTest, CreateMultipleEntities) {
-    Entity& entity1 = scene->createEntity();
-    Entity& entity2 = scene->createEntity();
+    auto entity1 = scene->createEntity();
+    auto entity2 = scene->createEntity();
     
     EXPECT_EQ(scene->getRootEntities().size(), 2);
-    EXPECT_NE(&entity1, &entity2);
+    EXPECT_NE(entity1.get(), entity2.get());
 }
 
 TEST_F(SceneTest, DestroyEntity) {
-    Entity& entity = scene->createEntity();
-    scene->destroyEntity(entity);
+    auto entity = scene->createEntity();
+    scene->destroyEntity(*entity);
     
     EXPECT_EQ(scene->getRootEntities().size(), 0);
 }
 
 TEST_F(SceneTest, DestroyEntityWithChildren) {
-    Entity& parent = scene->createEntity();
-    Entity& child = scene->createEntity();
+    auto parent = scene->createEntity();
+    auto child = scene->createEntity();
     
-    parent.addChild(&child);
+    parent->addChild(child.get());
     
     EXPECT_EQ(scene->getRootEntities().size(), 1);
-    EXPECT_EQ(parent.getChildren().size(), 1);
+    EXPECT_EQ(parent->getChildren().size(), 1);
     
-    scene->destroyEntity(parent);
+    scene->destroyEntity(*parent);
     
     EXPECT_EQ(scene->getRootEntities().size(), 0);
 }
@@ -62,19 +62,19 @@ TEST_F(SceneTest, DestroyEntityWithMultipleChildren_Regression) {
     // This test ensures that destroying a parent with multiple children
     // properly destroys all children and doesn't suffer from iterator invalidation
     // if the children list were to be iterated by reference while being modified.
-    Entity& parent = scene->createEntity();
-    Entity& child1 = scene->createEntity();
-    Entity& child2 = scene->createEntity();
-    Entity& child3 = scene->createEntity();
+    auto parent = scene->createEntity();
+    auto child1 = scene->createEntity();
+    auto child2 = scene->createEntity();
+    auto child3 = scene->createEntity();
     
-    parent.addChild(&child1);
-    parent.addChild(&child2);
-    parent.addChild(&child3);
+    parent->addChild(child1.get());
+    parent->addChild(child2.get());
+    parent->addChild(child3.get());
     
     EXPECT_EQ(scene->getRootEntities().size(), 1);
-    EXPECT_EQ(parent.getChildren().size(), 3);
+    EXPECT_EQ(parent->getChildren().size(), 3);
     
-    scene->destroyEntity(parent);
+    scene->destroyEntity(*parent);
     
     EXPECT_EQ(scene->getRootEntities().size(), 0);
 }
@@ -92,7 +92,7 @@ TEST_F(SceneTest, ClearScene) {
 }
 
 TEST_F(SceneTest, UpdateEntities) {
-    Entity& entity = scene->createEntity();
+    auto entity = scene->createEntity();
     // We use unique_ptr directly for the mock to control lifetime or let scene handle it.
     // But entity.addComponent creates the component internally. 
     // Since MockComponent is a strict mock by default if using MOCK_METHOD, 
@@ -113,7 +113,7 @@ TEST_F(SceneTest, UpdateEntities) {
     
     // Let's try explicit destruction of the entity or clearing the scene at the end of the test.
     
-    auto& component = entity.addComponent<MockComponent>();
+    auto& component = entity->addComponent<MockComponent>();
     EXPECT_CALL(component, update(0.1f)).Times(1);
     
     scene->update(0.1f);
@@ -123,10 +123,10 @@ TEST_F(SceneTest, UpdateEntities) {
 }
 
 TEST_F(SceneTest, UpdateOnlyActiveEntities) {
-    Entity& entity = scene->createEntity();
-    auto& component = entity.addComponent<MockComponent>();
+    auto entity = scene->createEntity();
+    auto& component = entity->addComponent<MockComponent>();
     
-    entity.setActive(false);
+    entity->setActive(false);
     
     EXPECT_CALL(component, update(testing::_)).Times(0);
     
@@ -136,12 +136,12 @@ TEST_F(SceneTest, UpdateOnlyActiveEntities) {
 }
 
 TEST_F(SceneTest, GetRootEntitiesOnlyReturnsRoots) {
-    Entity& parent = scene->createEntity();
-    Entity& child = scene->createEntity();
+    auto parent = scene->createEntity();
+    auto child = scene->createEntity();
     
-    parent.addChild(&child);
+    parent->addChild(child.get());
     
     auto roots = scene->getRootEntities();
     EXPECT_EQ(roots.size(), 1);
-    EXPECT_EQ(roots[0], &parent);
+    EXPECT_EQ(roots[0], parent.get());
 }
