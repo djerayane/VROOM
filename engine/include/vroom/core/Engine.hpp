@@ -4,6 +4,10 @@
 #include "vroom/core/SceneManager.hpp"
 #include "vroom/asset/AssetManager.hpp"
 
+#ifdef VROOM_WITH_IMGUI
+#include <functional>
+#endif
+
 // Forward declarations
 struct GLFWwindow;
 
@@ -46,6 +50,11 @@ public:
 
     static Engine& getInstance() { return *s_instance; }
 
+#ifdef VROOM_WITH_IMGUI
+    /// \brief Registers a callback invoked each frame for ImGui UI rendering.
+    void setImGuiCallback(std::function<void()> callback) { m_imguiCallback = std::move(callback); }
+#endif
+
 private:
     void initWindow();
     static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
@@ -59,6 +68,10 @@ private:
     std::unique_ptr<VulkanRenderer> m_renderer;
 
     static Engine* s_instance;
+
+#ifdef VROOM_WITH_IMGUI
+    std::function<void()> m_imguiCallback;
+#endif
 };
 
 } // namespace vroom

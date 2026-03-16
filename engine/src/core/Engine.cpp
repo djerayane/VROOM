@@ -10,6 +10,12 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#ifdef VROOM_WITH_IMGUI
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_vulkan.h>
+#endif
+
 #include <chrono>
 #include <stdexcept>
 #include <thread>
@@ -113,6 +119,11 @@ Engine::Engine(const EngineConfig& config)
 
     if (!m_config.headless) {
         initWindow();
+#ifdef VROOM_WITH_IMGUI
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGui_ImplGlfw_InitForVulkan(m_window, true);
+#endif
 
         m_renderer = std::make_unique<VulkanRenderer>(*m_assetManager);
         try {
@@ -137,6 +148,12 @@ Engine::~Engine() {
     if (m_renderer) {
         m_renderer.reset();
     }
+#ifdef VROOM_WITH_IMGUI
+    if (!m_config.headless) {
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+    }
+#endif
     if (m_window) {
         glfwDestroyWindow(m_window);
     }
@@ -193,6 +210,15 @@ void Engine::run() {
         update(deltaTime);
         if (m_renderer && m_window) {
             try {
+#ifdef VROOM_WITH_IMGUI
+                ImGui_ImplVulkan_NewFrame();
+                ImGui_ImplGlfw_NewFrame();
+                ImGui::NewFrame();
+                if (m_imguiCallback) {
+                    m_imguiCallback();
+                }
+                ImGui::Render();
+#endif
                 m_renderer->drawFrame(m_sceneManager->getActiveScene());
             } catch (const std::exception& e) {
                 LOG_ENGINE_ERROR("Render error: " + std::string(e.what()));

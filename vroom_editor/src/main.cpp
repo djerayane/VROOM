@@ -1,6 +1,7 @@
 #include <vroom/core/Engine.hpp>
 #include <vroom/components/MeshRenderer.hpp>
 #include <vroom/components/MeshFilter.hpp>
+#include <vroom/components/Transform.hpp>
 #include <vroom/asset/Mesh.hpp>
 #include <vroom/asset/Material.hpp>
 #include <vroom/asset/AssetManager.hpp>
@@ -8,6 +9,9 @@
 #include <glm/glm.hpp>
 #include <iostream>
 #include <vroom/logging/LogMacros.hpp>
+#ifdef VROOM_WITH_IMGUI
+#include <imgui.h>
+#endif
 
 int main()
 {
@@ -37,6 +41,24 @@ int main()
     defaultMaterial->setColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
     meshRenderer.setMaterial(defaultMaterial);
     engine.getSceneManager().loadScene(editorScene);
+#ifdef VROOM_WITH_IMGUI
+    engine.setImGuiCallback([&editorEntity]() {
+        ImGui::Begin("Transform");
+        auto* transform = editorEntity->getComponent<vroom::Transform>();
+        if (transform) {
+            glm::vec3 pos = transform->getPosition();
+            glm::vec3 rot = transform->getRotation();
+            glm::vec3 scale = transform->getScale();
+            if (ImGui::DragFloat3("Position", &pos.x, 0.01f))
+                transform->setPosition(pos);
+            if (ImGui::DragFloat3("Rotation", &rot.x, 1.0f))
+                transform->setRotation(rot);
+            if (ImGui::DragFloat3("Scale", &scale.x, 0.01f, 0.001f))
+                transform->setScale(scale);
+        }
+        ImGui::End();
+    });
+#endif
     // Run engine
     engine.run();
     return 0;
