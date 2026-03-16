@@ -37,7 +37,9 @@ static void pushModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& mode
     auto renderer = engine ? engine->getRenderer() : nullptr;
     if (renderer) {
         VkPipelineLayout layout = renderer->getPipelineLayout();
-        vkCmdPushConstants(reinterpret_cast<::VkCommandBuffer>(commandBuffer), layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &model);
+        // Model matrix sits after the viewProjection matrix in push constants.
+        constexpr uint32_t MODEL_OFFSET = sizeof(glm::mat4);
+        vkCmdPushConstants(reinterpret_cast<::VkCommandBuffer>(commandBuffer), layout, VK_SHADER_STAGE_VERTEX_BIT, MODEL_OFFSET, sizeof(glm::mat4), &model);
     }
 }
 
