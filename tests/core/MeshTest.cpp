@@ -124,10 +124,9 @@ TEST(MeshRendererTest, Draw) {
     auto material = std::make_shared<Material>();
     meshRenderer.setMaterial(material);
     
-    // We can't easily mock the internal drawing logic inside MeshRenderer::draw 
-    // without dependency injection of a renderer backend, but we can at least ensure 
-    // calling draw() doesn't crash and handles null checks.
-    
+    // Regression test: MeshRenderer::draw must not crash when called without an Engine
+    // instance (e.g. in unit tests). Previously this caused a null-pointer dereference
+    // via Engine::getInstance() -> Engine::s_instance == nullptr.
     EXPECT_NO_THROW(meshRenderer.draw(nullptr));
     
     // Test with missing components/assets
@@ -137,6 +136,13 @@ TEST(MeshRendererTest, Draw) {
     entity->setActive(true);
     meshRenderer.setMaterial(nullptr);
     EXPECT_NO_THROW(meshRenderer.draw(nullptr));
+}
+
+// Regression: MeshRenderer::draw must not segfault when no Engine instance exists.
+// The bug was Engine::getInstance() dereferencing s_instance==nullptr.
+TEST(MeshRendererTest, DrawWithoutEngineDoesNotCrash) {
+    MeshRenderer renderer;
+    EXPECT_NO_THROW(renderer.draw(nullptr));
 }
 
 // --- Scene Integration Tests ---

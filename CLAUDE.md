@@ -85,6 +85,7 @@ Semantic Versioning: MAJOR.MINOR.PATCH
 ### Testing
 - Write tests when implementing features
 - Write tests before fixing bugs
+- **Always add a regression test when fixing a bug** to prevent reintroduction
 - Follow Arrange-Act-Assert convention
 - Test edge cases and error conditions
 - Use test doubles for dependencies (except inexpensive third-party libs)

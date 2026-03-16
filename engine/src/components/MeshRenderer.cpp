@@ -17,7 +17,8 @@ void MeshRenderer::setMaterial(std::shared_ptr<Material> material) {
 
 static void ensureMeshUploaded(std::shared_ptr<Mesh> mesh) {
     if (!mesh->getGPUData()) {
-        auto renderer = Engine::getInstance().getRenderer();
+        auto* engine = Engine::tryGetInstance();
+        auto renderer = engine ? engine->getRenderer() : nullptr;
         if (renderer) {
             renderer->uploadMesh(mesh);
         }
@@ -32,7 +33,8 @@ static void bindMeshBuffers(VkCommandBuffer commandBuffer, const std::shared_ptr
 }
 
 static void pushModelMatrix(VkCommandBuffer commandBuffer, const glm::mat4& model) {
-    auto renderer = Engine::getInstance().getRenderer();
+    auto* engine = Engine::tryGetInstance();
+    auto renderer = engine ? engine->getRenderer() : nullptr;
     if (renderer) {
         VkPipelineLayout layout = renderer->getPipelineLayout();
         vkCmdPushConstants(reinterpret_cast<::VkCommandBuffer>(commandBuffer), layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &model);

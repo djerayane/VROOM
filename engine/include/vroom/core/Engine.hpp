@@ -49,6 +49,7 @@ public:
     VulkanRenderer* getRenderer() const { return m_renderer.get(); }
 
     static Engine& getInstance() { return *s_instance; }
+    static Engine* tryGetInstance() { return s_instance; }
 
 #ifdef VROOM_WITH_IMGUI
     /// \brief Registers a callback invoked each frame for ImGui UI rendering.
