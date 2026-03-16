@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "vroom/vulkan/VulkanRenderer.hpp"
+#include "vroom/asset/AssetManager.hpp"
 #include "vroom/asset/Mesh.hpp"
 #include "tests/vulkan/MockWindow.hpp"
 #include "vroom/vulkan/VulkanMeshData.hpp"
@@ -15,6 +16,7 @@ protected:
         }
     }
 
+    vroom::AssetManager m_assetManager;
     std::unique_ptr<MockWindow> m_window;
     bool initializationFailed = false;
     std::string initializationError;
@@ -26,7 +28,7 @@ TEST_F(VulkanRendererTest, Initialization) {
     }
 
     try {
-        vroom::VulkanRenderer renderer;
+        vroom::VulkanRenderer renderer(m_assetManager);
         renderer.init(m_window->get());
         
         // Just check if we reached here without exception
@@ -42,7 +44,7 @@ TEST_F(VulkanRendererTest, MeshUpload) {
     }
 
     try {
-        vroom::VulkanRenderer renderer;
+        vroom::VulkanRenderer renderer(m_assetManager);
         renderer.init(m_window->get());
 
         // Create a simple mesh
